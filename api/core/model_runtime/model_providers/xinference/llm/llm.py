@@ -1,5 +1,6 @@
 from collections.abc import Generator, Iterator
 from typing import Optional, cast
+import logging
 
 from openai import (
     APIConnectionError,
@@ -66,6 +67,8 @@ from core.model_runtime.utils import helper
 DEFAULT_MAX_RETRIES = 3
 DEFAULT_INVOKE_TIMEOUT = 60
 
+# 设置日志记录器
+logger = logging.getLogger(__name__)
 
 class XinferenceAILargeLanguageModel(LargeLanguageModel):
     def _invoke(
@@ -84,12 +87,41 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
 
         see `core.model_runtime.model_providers.__base.large_language_model.LargeLanguageModel._invoke`
         """
+        # 设置默认参数
+        if not model_parameters:
+            model_parameters = {
+                "temperature": 0.7,
+                "top_p": 0.7,
+                "top_k": 10,
+                "max_tokens": 2048,
+                "presence_penalty": 0.0,
+                "frequency_penalty": 0.0
+            }
+        
+        # 检查并调整 temperature 范围
         if "temperature" in model_parameters:
             if model_parameters["temperature"] < 0.01:
                 model_parameters["temperature"] = 0.01
             elif model_parameters["temperature"] > 1.0:
                 model_parameters["temperature"] = 0.99
 
+        # 打印调用信息
+        print("\n" + "="*50)
+        print("Xinference Model Invocation:")
+        print(f"Model: {model}")
+        print(f"Parameters: {model_parameters}")
+        print("="*50 + "\n")
+
+        # 记录模型调用的详细信息
+        logger.info("=== Xinference LLM Invocation Start ===")
+        logger.info(f"Model: {model}")
+        logger.info("Model Parameters:")
+        logger.info(f"  Temperature: {model_parameters.get('temperature', 'Not Set')}")
+        logger.info(f"  Top P: {model_parameters.get('top_p', 'Not Set')}")
+        logger.info(f"  Top K: {model_parameters.get('top_k', 'Not Set')}")
+        logger.info(f"  Max Tokens: {model_parameters.get('max_tokens', 'Not Set')}")
+        logger.info(f"Stream Mode: {stream}")
+              
         return self._generate(
             model=model,
             credentials=credentials,

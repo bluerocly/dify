@@ -6,6 +6,9 @@ from typing import Optional, Union, cast
 from urllib.parse import urljoin
 
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 from core.model_runtime.entities.common_entities import I18nObject
 from core.model_runtime.entities.llm_entities import LLMMode, LLMResult, LLMResultChunk, LLMResultChunkDelta
@@ -68,8 +71,26 @@ class OAIAPICompatLargeLanguageModel(_CommonOaiApiCompat, LargeLanguageModel):
         :param user: unique user id
         :return: full response or stream response chunk generator result
         """
+        model_parameters = {
+                "top_k": 10
+        }
+        # 将打印语句移到这里，确保在调用 _generate 之前执行
+        print("\n###Model Parameters:")
+        print(f"  Model: {model}")
+        print(f"  Temperature: {model_parameters.get('temperature', 'Not Set')}")
+        print(f"  Top P: {model_parameters.get('top_p', 'Not Set')}")
+        print(f"  Top K: {model_parameters.get('top_k', 'Not Set')}")
+        print(f"  Max Tokens: {model_parameters.get('max_tokens', 'Not Set')}")
+        print(f"  Stream: {stream}")
+        print(f"  Stop: {stop}")
+        print(f"  User: {user}")
+        print("  Prompt Messages:")
+        for msg in prompt_messages:
+            print(f"    - {msg.__class__.__name__}: {msg.content[:100]}...")
+        print("\n")
 
-        # text completion model
+        logging.info("\n###Model Parameters:")
+        
         return self._generate(
             model=model,
             credentials=credentials,
